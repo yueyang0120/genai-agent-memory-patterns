@@ -1,117 +1,125 @@
 # LLM Memory Patterns
 
-A comparative study of context window management strategies for large language models, implemented as an interactive educational tool.
+An interactive playground to explore how different memory strategies work in LLM applications. Built for developers who want to understand the tradeoffs before implementing memory in production.
 
-## Overview
+## What is this?
 
-This project provides a systematic exploration of eight distinct memory management approaches used in conversational AI systems. Each implementation includes transparent introspection capabilities to demonstrate how different strategies manipulate the context window and affect model behavior.
+When building chatbots or AI agents, you need to decide how to manage conversation history. This project implements 8 common approaches, with full transparency into what gets sent to the LLM at each turn.
 
-## Implemented Strategies
+Think of it as a debugging tool that shows you exactly what's happening inside the "memory" component.
 
-### Basic Approaches
-1. **Full Memory** - Maintains complete conversation history without compression
-2. **Sliding Window** - Fixed-size buffer with FIFO eviction policy
+## The 8 Strategies
 
-### Compression & Filtering
-3. **Relevance Filtering** - Embedding-based semantic similarity retrieval
-4. **Summary Memory** - Recursive summarization with buffer management
+**Basic**
+- **Full Memory** - Keep everything (until you hit token limits)
+- **Sliding Window** - Only keep last N messages
 
-### External Storage
-5. **Vector Memory (RAG)** - Persistent vector database with similarity search
-6. **Knowledge Graph** - Structured fact extraction and graph-based retrieval
+**Smart Filtering**
+- **Relevance Filter** - Use embeddings to find similar past messages
+- **Summary Memory** - Compress old messages into summaries
 
-### Hybrid Systems
-7. **Hierarchical Memory** - Multi-tier architecture combining vector search and recency
-8. **OS-Inspired Memory** - Paging mechanism with explicit RAM/disk separation
+**External Storage**
+- **Vector Memory (RAG)** - Store in vector DB, retrieve by similarity
+- **Knowledge Graph** - Extract facts as triples, query the graph
 
-## Key Features
+**Hybrid**
+- **Hierarchical** - Combine vector search + recent messages (most production systems use this)
+- **OS-Inspired** - Simulate RAM/disk with explicit paging
 
-- Transparent context inspection for each strategy
-- Real-time visualization of memory state transitions
-- Structured output using Pydantic schemas
-- LLM-based entity extraction for knowledge graphs
-- Comparative performance analysis across strategies
+## Quick Start
 
-## Technical Stack
-
-- **Python 3.10+**
-- **Streamlit** - Interactive web interface
-- **LangChain** - LLM orchestration framework
-- **OpenAI GPT-4o-mini** - Language model backend
-- **ChromaDB** - Vector storage and retrieval
-- **NetworkX** - Graph data structure and algorithms
-
-## Installation
-
-1. Clone the repository:
 ```bash
+# clone and setup
 git clone https://github.com/yueyang0120/genai-agent-memory-patterns.git
 cd genai-agent-memory-patterns
-```
-
-2. Create and activate virtual environment:
-```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
-```
-
-3. Install dependencies:
-```bash
 pip install -r requirements.txt
-```
 
-4. Configure environment variables:
-```bash
+# add your openai key
 cp env.example .env
-# Add your OPENAI_API_KEY to .env
-```
+# edit .env with your OPENAI_API_KEY
 
-## Usage
-
-Start the interactive playground:
-```bash
+# run
 streamlit run app/playground.py
 ```
 
-Access the interface at `http://localhost:8502`
+## How to Use
 
-## Architecture
-
-### Base Memory Class
-All strategies inherit from `BaseMemory` abstract class with three core methods:
-- `add_message(role, content)` - Append new conversation turn
-- `get_context(query)` - Retrieve relevant context for current query
-- `clear()` - Reset memory state
-
-### Context Retrieval
-Each `get_context()` call returns:
-- `final_prompt` - Formatted context string for LLM
-- `debug_info` - Internal state for visualization
+1. Pick a strategy from the sidebar
+2. Chat with the bot
+3. Click "Internal Monologue & Memory State" to see:
+   - What context was sent to the LLM
+   - Which messages were kept/dropped
+   - Similarity scores, summaries, graph facts, etc.
 
 ## Strategy Comparison
 
-| Strategy | Token Growth | Recall | Latency | Use Case |
-|----------|-------------|--------|---------|----------|
-| Full Memory | O(n) | Perfect | Low | Short conversations |
-| Sliding Window | O(1) | Recent only | Low | Stateless interactions |
-| Relevance Filter | O(n) | Semantic | Medium | Topic-focused dialogue |
-| Summary | O(log n) | Lossy | High | Long-form conversations |
-| Vector (RAG) | O(1) retrieval | Semantic | Medium | Knowledge-intensive tasks |
-| Knowledge Graph | O(edges) | Structured | High | Factual reasoning |
-| Hierarchical | O(k) | Balanced | Medium | Production systems |
-| OS-Inspired | O(k) | Explicit | Medium | Agent frameworks |
+| Strategy | Memory Growth | Best For | Downside |
+|----------|--------------|----------|----------|
+| Full Memory | Linear | Short chats | Expensive at scale |
+| Sliding Window | Constant | Stateless tasks | Forgets early context |
+| Relevance Filter | Linear | Topic jumps | Misses conversation flow |
+| Summary | Logarithmic | Long conversations | Loses details |
+| Vector (RAG) | Constant retrieval | Knowledge Q&A | No temporal awareness |
+| Knowledge Graph | Depends on facts | Structured reasoning | Hard to extract reliably |
+| Hierarchical | Constant | Production apps | More complex |
+| OS-Inspired | Constant | Agent frameworks | Needs explicit swapping logic |
 
-## Educational Goals
+## Tech Stack
 
-- Understand tradeoffs between memory strategies
-- Observe context window manipulation effects
-- Learn when to apply each approach in production
-- Explore limitations through transparent debugging
+- Python 3.10+
+- Streamlit (UI)
+- LangChain (LLM wrapper)
+- OpenAI GPT-4o-mini
+- ChromaDB (vector store)
+- NetworkX (graph)
+
+## Architecture Notes
+
+### Base Class
+All strategies inherit from `BaseMemory`:
+```python
+def add_message(role: str, content: str)
+def get_context(query: str) -> dict  # returns {final_prompt, debug_info}
+def clear()
+```
+
+### Knowledge Graph
+Uses GPT-4o-mini with structured output to extract triples:
+```python
+"I work at Google" → (user, work_at, google)
+```
+
+### Vector Memory
+Stores each message as an embedding in ChromaDB, retrieves top-k by similarity.
+
+### Hierarchical
+Combines two layers:
+- Long-term: Vector search (top 2)
+- Short-term: Sliding window (last 3)
+
+## When to Use What
+
+**Use Full Memory if:**
+- Conversations are short (<10 turns)
+- You need perfect recall
+
+**Use Sliding Window if:**
+- Each message is independent
+- You only care about recent context
+
+**Use Vector Memory if:**
+- Users ask about things mentioned long ago
+- You have a knowledge base to search
+
+**Use Hierarchical if:**
+- Building a production chatbot
+- Need balance between recency and relevance
 
 ## Implementation Details
 
-### Knowledge Graph
-Uses structured output with Pydantic models for reliable triple extraction:
+The Knowledge Graph uses Pydantic structured output for reliable extraction (no regex, no eval):
 ```python
 class Triple(BaseModel):
     subject: str
@@ -119,33 +127,20 @@ class Triple(BaseModel):
     object: str
 ```
 
-### Vector Memory
-Implements similarity search with ChromaDB:
-- Automatic embedding generation
-- Top-k retrieval with distance scores
-- Metadata filtering by timestamp and role
-
-### Hierarchical Memory
-Combines two layers:
-- Long-term: Vector search (top-2 relevant facts)
-- Short-term: Sliding window (last 3 messages)
+Entity extraction for graph queries also uses structured output to avoid hardcoded patterns.
 
 ## Contributing
 
-Contributions are welcome. Areas for improvement:
-- Additional memory strategies
-- Enhanced retrieval algorithms
-- Performance benchmarks
-- Visualization improvements
+PRs welcome. Ideas:
+- Add more strategies (e.g., attention-based, learned compression)
+- Better visualization
+- Benchmark suite
+- Multi-turn evaluation metrics
 
 ## License
 
-MIT License
+MIT
 
-## References
+## Why I Built This
 
-This project synthesizes concepts from:
-- Retrieval-Augmented Generation (RAG)
-- MemGPT architecture
-- LangChain memory modules
-- Context window optimization techniques
+Most tutorials show you *how* to add memory to an LLM app, but don't explain *which* strategy to use. This project lets you see the tradeoffs firsthand by inspecting the actual context sent to the model.
