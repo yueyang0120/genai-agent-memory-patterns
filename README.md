@@ -1,49 +1,55 @@
-# 🧠 LLM Memory Patterns Playground
+# LLM Memory Patterns
 
-An educational tool to explore and understand how different memory strategies manipulate the Context Window in Large Language Models.
+A comparative study of context window management strategies for large language models, implemented as an interactive educational tool.
 
-## 🎯 Purpose
+## Overview
 
-This is **NOT** just a chatbot; it's an **inspector for the AI's brain**. Each memory strategy demonstrates different approaches to managing conversation history, with transparent debug information showing exactly what's happening under the hood.
+This project provides a systematic exploration of eight distinct memory management approaches used in conversational AI systems. Each implementation includes transparent introspection capabilities to demonstrate how different strategies manipulate the context window and affect model behavior.
 
-## 🚀 Features
+## Implemented Strategies
 
-### 8 Memory Strategies
+### Basic Approaches
+1. **Full Memory** - Maintains complete conversation history without compression
+2. **Sliding Window** - Fixed-size buffer with FIFO eviction policy
 
-1. **Full Memory** - Remember everything (token explosion demo)
-2. **Sliding Window** - Short-term focus (goldfish effect)
-3. **Relevance Filtering** - Semantic similarity-based retrieval
-4. **Summary Memory** - Lossy compression with recursive summarization
-5. **Vector Memory (RAG)** - Infinite long-term memory with ChromaDB
-6. **Knowledge Graph** - Structured facts with LLM-based triple extraction
-7. **Hierarchical Memory** - Industry-standard hybrid approach
-8. **OS-Like Memory** - RAM/Disk paging simulation (MemGPT-lite)
+### Compression & Filtering
+3. **Relevance Filtering** - Embedding-based semantic similarity retrieval
+4. **Summary Memory** - Recursive summarization with buffer management
 
-### Educational Features
+### External Storage
+5. **Vector Memory (RAG)** - Persistent vector database with similarity search
+6. **Knowledge Graph** - Structured fact extraction and graph-based retrieval
 
-- **Internal Monologue Inspector**: See exactly what context is sent to the LLM
-- **Debug Information**: Transparent display of memory state, dropped messages, retrieved facts
-- **Structured Output**: Uses Pydantic for reliable knowledge extraction
-- **Multi-language Support**: Works with English and Chinese
+### Hybrid Systems
+7. **Hierarchical Memory** - Multi-tier architecture combining vector search and recency
+8. **OS-Inspired Memory** - Paging mechanism with explicit RAM/disk separation
 
-## 🛠️ Tech Stack
+## Key Features
+
+- Transparent context inspection for each strategy
+- Real-time visualization of memory state transitions
+- Structured output using Pydantic schemas
+- LLM-based entity extraction for knowledge graphs
+- Comparative performance analysis across strategies
+
+## Technical Stack
 
 - **Python 3.10+**
-- **Streamlit** - Interactive UI
-- **LangChain** - LLM orchestration
-- **OpenAI GPT-4o-mini** - LLM backend
-- **ChromaDB** - Vector storage
-- **NetworkX** - Knowledge graph
+- **Streamlit** - Interactive web interface
+- **LangChain** - LLM orchestration framework
+- **OpenAI GPT-4o-mini** - Language model backend
+- **ChromaDB** - Vector storage and retrieval
+- **NetworkX** - Graph data structure and algorithms
 
-## 📦 Installation
+## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/llm-memory-patterns.git
-cd llm-memory-patterns
+git clone https://github.com/yueyang0120/genai-agent-memory-patterns.git
+cd genai-agent-memory-patterns
 ```
 
-2. Create virtual environment:
+2. Create and activate virtual environment:
 ```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
@@ -54,49 +60,92 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
+4. Configure environment variables:
 ```bash
 cp env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Add your OPENAI_API_KEY to .env
 ```
 
-## 🎮 Usage
+## Usage
 
-Run the Streamlit app:
+Start the interactive playground:
 ```bash
 streamlit run app/playground.py
 ```
 
-Then open your browser to `http://localhost:8502`
+Access the interface at `http://localhost:8502`
 
-## 📚 Learning Path
+## Architecture
 
-1. Start with **Full Memory** to see the baseline
-2. Try **Sliding Window** to understand the forgetting problem
-3. Explore **Vector Memory (RAG)** for semantic retrieval
-4. Test **Knowledge Graph** for structured reasoning
-5. Compare **Hierarchical Memory** as the production-ready solution
+### Base Memory Class
+All strategies inherit from `BaseMemory` abstract class with three core methods:
+- `add_message(role, content)` - Append new conversation turn
+- `get_context(query)` - Retrieve relevant context for current query
+- `clear()` - Reset memory state
 
-## 🎓 Educational Goals
+### Context Retrieval
+Each `get_context()` call returns:
+- `final_prompt` - Formatted context string for LLM
+- `debug_info` - Internal state for visualization
 
-- Understand the tradeoffs between different memory strategies
-- See how context window manipulation affects LLM responses
-- Learn when to use each strategy in production systems
-- Explore the limitations of each approach
+## Strategy Comparison
 
-## 🤝 Contributing
+| Strategy | Token Growth | Recall | Latency | Use Case |
+|----------|-------------|--------|---------|----------|
+| Full Memory | O(n) | Perfect | Low | Short conversations |
+| Sliding Window | O(1) | Recent only | Low | Stateless interactions |
+| Relevance Filter | O(n) | Semantic | Medium | Topic-focused dialogue |
+| Summary | O(log n) | Lossy | High | Long-form conversations |
+| Vector (RAG) | O(1) retrieval | Semantic | Medium | Knowledge-intensive tasks |
+| Knowledge Graph | O(edges) | Structured | High | Factual reasoning |
+| Hierarchical | O(k) | Balanced | Medium | Production systems |
+| OS-Inspired | O(k) | Explicit | Medium | Agent frameworks |
 
-This is an educational project. Feel free to:
-- Add new memory strategies
-- Improve extraction algorithms
-- Enhance visualization
-- Add more debug information
+## Educational Goals
 
-## 📄 License
+- Understand tradeoffs between memory strategies
+- Observe context window manipulation effects
+- Learn when to apply each approach in production
+- Explore limitations through transparent debugging
+
+## Implementation Details
+
+### Knowledge Graph
+Uses structured output with Pydantic models for reliable triple extraction:
+```python
+class Triple(BaseModel):
+    subject: str
+    relation: str
+    object: str
+```
+
+### Vector Memory
+Implements similarity search with ChromaDB:
+- Automatic embedding generation
+- Top-k retrieval with distance scores
+- Metadata filtering by timestamp and role
+
+### Hierarchical Memory
+Combines two layers:
+- Long-term: Vector search (top-2 relevant facts)
+- Short-term: Sliding window (last 3 messages)
+
+## Contributing
+
+Contributions are welcome. Areas for improvement:
+- Additional memory strategies
+- Enhanced retrieval algorithms
+- Performance benchmarks
+- Visualization improvements
+
+## License
 
 MIT License
 
-## 🙏 Acknowledgments
+## References
 
-Built as an educational tool to demystify LLM memory management.
-
+This project synthesizes concepts from:
+- Retrieval-Augmented Generation (RAG)
+- MemGPT architecture
+- LangChain memory modules
+- Context window optimization techniques
