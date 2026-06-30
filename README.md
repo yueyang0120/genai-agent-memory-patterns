@@ -8,6 +8,16 @@ When building chatbots or AI agents, you need to decide how to manage conversati
 
 Think of it as a debugging tool that shows you exactly what's happening inside the "memory" component.
 
+## At a Glance
+
+| Area | Implementation signal |
+| --- | --- |
+| Product problem | Help developers choose the right memory strategy before building an agent or chatbot. |
+| Interactive surface | Streamlit playground with side-by-side memory-state inspection. |
+| Agent systems depth | Implements short-term, summary, vector, graph, hierarchical, and OS-inspired memory patterns. |
+| Debuggability | Exposes the exact context sent to the model, plus retrieval scores, summaries, and extracted facts. |
+| FDE relevance | Demonstrates the ability to turn abstract LLM architecture tradeoffs into a working tool for technical stakeholders. |
+
 ## The 8 Strategies
 
 **Basic**
@@ -128,6 +138,17 @@ class Triple(BaseModel):
 ```
 
 Entity extraction for graph queries also uses structured output to avoid hardcoded patterns.
+
+## Review Guide
+
+If you are scanning this repository, the most relevant implementation areas are:
+
+- `core/base.py`: shared memory interface and debug contract.
+- `core/basic_memory.py`: full-memory and sliding-window baselines.
+- `core/advanced_memory.py`: relevance filtering and summary memory.
+- `core/external_memory.py`: vector memory and knowledge-graph memory.
+- `core/hybrid_memory.py`: hierarchical and OS-inspired strategies.
+- `app/playground.py`: interactive UI that makes memory tradeoffs inspectable.
 
 ## Contributing
 
